@@ -1,15 +1,12 @@
-import {Engine, Scene, Color, FadeInOut, EngineOptions} from 'excalibur';
-import { Dispatch, RefObject, SetStateAction, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import { Dispatch, RefObject, SetStateAction, useEffect, useLayoutEffect, useState} from 'react';
 
-import { loader } from "@/excalibur/resources"
+// interface IRefExcaliburGame
+// {
+//     game: Engine | null;
+//     currentScene: Scene | null;
+// }
 
-interface IRefExcaliburGame
-{
-    game: Engine | null;
-    currentScene: Scene | null;
-}
-
-type IExcaliburRef = RefObject<IRefExcaliburGame | null>
+// type ExcaliburRef = RefObject<IRefExcaliburGame | null>
 
 // type UseExcaliburReturn = [
 //     setSomeState:Dispatch<SetStateAction<boolean>>
@@ -17,29 +14,40 @@ type IExcaliburRef = RefObject<IRefExcaliburGame | null>
 
 
 const useExcaliburGame = (
-    excaliburRef: IExcaliburRef, 
-    excaliburRefConfig: EngineOptions
+    excaliburRef: any //ExcaliburRef,
   )/*: UseExcaliburReturn */ => {
 
     const [someState, setSomeState] = useState(false)
     
     useLayoutEffect(() => {
         if (excaliburRef.current === null){
+            const that = this
+            console.log({that})
 
-            const game = new Engine(excaliburRefConfig)
+            Promise.all(
+                [
+                    import('excalibur'),  
+                    import("@/excalibur/config"),
+                    import("@/excalibur/resources")
+                ]
+            ).then(
+                ([{ Engine, Color, FadeInOut }, configModule, {loader}]) => {
+                    const excaliburConfig = configModule.default
+                    const game = new Engine(excaliburConfig)
 
-            excaliburRef.current = {game, currentScene: null}
-            
-            game.start('start', { // name of the start scene 'start'
-                loader, // Optional loader (but needed for loading images/sounds)
-                inTransition: new FadeInOut({ // Optional in transition
-                duration: 1000,
-                direction: 'in',
-                color: Color.ExcaliburBlue
+                    excaliburRef.current = {game, currentScene: null}
+                    
+                    game.start('start', { // name of the start scene 'start'
+                        loader, // Optional loader (but needed for loading images/sounds)
+                        inTransition: new FadeInOut({ // Optional in transition
+                        duration: 1000,
+                        direction: 'in',
+                        color: Color.ExcaliburBlue
+                        })
+                    }).then(() => {
+                        excaliburRef.current = {game: game, currentScene:game.currentScene}
+                    }); 
                 })
-            }).then(() => {
-                excaliburRef.current = {game: game, currentScene:game.currentScene}
-            }); 
         }
         
         return () => {
@@ -59,4 +67,4 @@ const useExcaliburGame = (
     return [setSomeState];
   };
 
-export {useExcaliburGame as default, type IExcaliburRef}
+export default useExcaliburGame
